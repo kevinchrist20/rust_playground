@@ -13,7 +13,7 @@ fn main() {
 }
 
 fn run_app() -> Result<(), Box<dyn std::error::Error>> {
-    let connection = sqlite::open("./db/todo_db")?;
+    let connection = sqlite::open("./db/todo.db")?;
 
     println!("******** Welcome to the ToDo Store *********\n");
 
