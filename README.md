@@ -1,6 +1,6 @@
 # Rust Playground
 
-Welcome to the Rust Playground! This is a space where I experiment with the Rust language features, test ideas, and explore different crates available on crates.io. Below, are some resources used in this playground.
+Welcome to the Rust Playground! This is a space where I experiment with the Rust language features, test ideas, and explore different crates available on [crates.io](https://crates.io/). Below, are some resources used in this playground.
 
 ## Dependencies
 
@@ -17,7 +17,7 @@ Welcome to the Rust Playground! This is a space where I experiment with the Rust
 
 ### SQL store
 
-[SQL Store]() is a simple task management application that uses SQLite for storage. 
+[SQL Store](https://github.com/kevinchrist20/rust_playground/tree/master/sql_store) is a simple task management application that uses SQLite for storage. 
 It allows you to add, list, delete, read, and update tasks.
 
 #### Features:
