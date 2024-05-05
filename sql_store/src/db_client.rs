@@ -26,7 +26,6 @@ impl DbClient {
         let mut task_list: Vec<Task> = Vec::new();
 
         let query = "SELECT * FROM tasks";
-
         let mut stmt = self.connection.prepare(query)?;
 
         while let Ok(State::Row) = stmt.next() {
@@ -108,7 +107,6 @@ impl DbClient {
             ][..],
         )?;
         stmt.next()?;
-
 
         Ok(())
     }

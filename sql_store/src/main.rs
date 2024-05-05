@@ -60,7 +60,6 @@ fn add_task(client: &DbClient) -> Result<(), Box<dyn std::error::Error>> {
     io::stdin().read_line(&mut task_name)?;
 
     let task = Task::new(task_name.trim().to_string());
-
     client.create(&task)?;
 
     println!("Task inserted successfully! \n");
@@ -72,7 +71,6 @@ fn get_all(client: &DbClient) -> Result<(), Box<dyn std::error::Error>> {
     println!("\nTasks list");
 
     let task_list = client.get_all()?;
-
     for task in task_list {
         println!("{}", task);
     }
