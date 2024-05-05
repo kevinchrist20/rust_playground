@@ -43,7 +43,7 @@ fn run_app() -> Result<(), Box<dyn std::error::Error>> {
             1 => add_task(&connection)?,
             2 => get_all(&connection)?,
             3 => delete_task(&connection)?,
-            4 => println!("Read entry"),
+            4 => get_task(&connection)?,
             5 => println!("Update entry"),
             6 => println!("Clear all"),
             _ => println!("Unknown input. Try again"),
@@ -113,6 +113,39 @@ fn delete_task(connection: &Connection) -> Result<(), Box<dyn std::error::Error>
     stmt.next()?;
 
     println!("Task deleted successfully! \n");
+
+    Ok(())
+}
+
+fn get_task(connection: &Connection) -> Result<(), Box<dyn std::error::Error>> {
+    println!("Task ID: ");
+    let mut task_id = String::new();
+
+    io::stdin().read_line(&mut task_id)?;
+    let task_id: i32 = task_id.trim().parse::<i32>()?;
+
+    let query = "SELECT * FROM tasks WHERE id = :id";
+
+    let mut stmt = connection.prepare(query)?;
+    stmt.bind((":id", task_id.to_string().as_str()))?;
+
+    while let Ok(State::Row) = stmt.next() {
+        let id: i64 = stmt.read::<i64, _>("id")?;
+        let title: String = stmt.read::<String, _>("title")?;
+        let status: i64 = stmt.read::<i64, _>("status")?;
+        let created_at: String = stmt.read::<String, _>("created_at")?;
+
+        let task = Task {
+            id,
+            title,
+            status,
+            created_at,
+        };
+
+        println!("{}", task);
+    }
+
+    println!();
 
     Ok(())
 }
