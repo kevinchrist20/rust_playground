@@ -54,9 +54,9 @@ fn run_app() -> Result<(), Box<dyn std::error::Error>> {
                 io::stdin().read_line(&mut decision)?;
 
                 let decision = decision.trim().parse::<char>()?;
-                match decision {
-                    'A' => update_task_status(&connection)?,
-                    'B' => update_task_title(&connection)?,
+                match decision.to_ascii_lowercase() {
+                    'a' => update_task_status(&connection)?,
+                    'b' => update_task_title(&connection)?,
                     _ => println!("Unknown input. Try again"),
                 }
             }
