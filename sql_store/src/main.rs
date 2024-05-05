@@ -44,7 +44,22 @@ fn run_app() -> Result<(), Box<dyn std::error::Error>> {
             2 => get_all(&connection)?,
             3 => delete_task(&connection)?,
             4 => get_task(&connection)?,
-            5 => println!("Update entry"),
+            5 => {
+                let mut decision = String::new();
+
+                println!("What would you like to do?");
+                println!("(A) Update task status.");
+                println!("(B) Update task name.");
+
+                io::stdin().read_line(&mut decision)?;
+
+                let decision = decision.trim().parse::<char>()?;
+                match decision {
+                    'A' => update_task_status(&connection)?,
+                    'B' => update_task_title(&connection)?,
+                    _ => println!("Unknown input. Try again"),
+                }
+            }
             6 => clear_all_tasks(&connection)?,
             _ => println!("Unknown input. Try again"),
         }
@@ -150,7 +165,6 @@ fn get_task(connection: &Connection) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-
 fn clear_all_tasks(connection: &Connection) -> Result<(), Box<dyn std::error::Error>> {
     println!("Clearing all tasks....\n");
 
@@ -159,6 +173,68 @@ fn clear_all_tasks(connection: &Connection) -> Result<(), Box<dyn std::error::Er
     connection.execute(query)?;
 
     println!("Database cleared successfully.\n");
-    
+
+    Ok(())
+}
+
+fn update_task_status(connection: &Connection) -> Result<(), Box<dyn std::error::Error>> {
+    println!("Task ID: ");
+    let mut task_id = String::new();
+
+    io::stdin().read_line(&mut task_id)?;
+    let task_id = task_id.trim().parse::<i32>()?;
+
+    let mut status = String::new();
+    println!("Task status: (1) Completed. (0) Pending");
+
+    io::stdin().read_line(&mut status)?;
+    let status = match status.trim().parse::<i32>() {
+        Ok(num) => {
+            if num == 1 || num == 0 {
+                num
+            } else {
+                return Err("Failed to parse status. Please enter 1 or 0.".into());
+            }
+        }
+        _ => return Err("Failed to parse status. Please enter 1 or 0.".into()),
+    };
+
+    let query = "UPDATE tasks SET status = :status WHERE id = :id;";
+    let mut stmt = connection.prepare(query)?;
+
+    stmt.bind(
+        &[
+            (":status", status.to_string().as_str()),
+            (":id", task_id.to_string().as_str()),
+        ][..],
+    )?;
+    stmt.next()?;
+
+    Ok(())
+}
+
+fn update_task_title(connection: &Connection) -> Result<(), Box<dyn std::error::Error>> {
+    println!("Task ID: ");
+    let mut task_id = String::new();
+
+    io::stdin().read_line(&mut task_id)?;
+    let task_id = task_id.trim().parse::<i32>()?;
+
+    let mut title = String::new();
+    println!("Task title: ");
+
+    io::stdin().read_line(&mut title)?;
+
+    let query = "UPDATE tasks SET title = :title WHERE id = :id;";
+    let mut stmt = connection.prepare(query)?;
+
+    stmt.bind(
+        &[
+            (":title", title.to_string().as_str()),
+            (":id", task_id.to_string().as_str()),
+        ][..],
+    )?;
+    stmt.next()?;
+
     Ok(())
 }
