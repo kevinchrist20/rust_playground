@@ -45,7 +45,7 @@ fn run_app() -> Result<(), Box<dyn std::error::Error>> {
             3 => delete_task(&connection)?,
             4 => get_task(&connection)?,
             5 => println!("Update entry"),
-            6 => println!("Clear all"),
+            6 => clear_all_tasks(&connection)?,
             _ => println!("Unknown input. Try again"),
         }
     }
@@ -147,5 +147,18 @@ fn get_task(connection: &Connection) -> Result<(), Box<dyn std::error::Error>> {
 
     println!();
 
+    Ok(())
+}
+
+
+fn clear_all_tasks(connection: &Connection) -> Result<(), Box<dyn std::error::Error>> {
+    println!("Clearing all tasks....\n");
+
+    let query = "DELETE FROM tasks";
+
+    connection.execute(query)?;
+
+    println!("Database cleared successfully.\n");
+    
     Ok(())
 }
