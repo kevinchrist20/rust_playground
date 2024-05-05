@@ -16,6 +16,15 @@ impl Task {
             created_at: String::from(""),
         }
     }
+
+    pub fn empty() -> Self {
+        Task {
+            id: 0,
+            title: String::from(""),
+            status: 0,
+            created_at: String::from(""),
+        }  
+    }
 }
 
 impl fmt::Display for Task {

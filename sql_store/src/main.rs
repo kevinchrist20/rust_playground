@@ -1,5 +1,5 @@
-mod models;
 mod db_client;
+mod models;
 
 use sqlite::{Connection, State};
 use std::io;
@@ -42,9 +42,9 @@ fn run_app() -> Result<(), Box<dyn std::error::Error>> {
         match choice {
             0 => break,
             1 => add_task(&db_client)?,
-            // 2 => get_all(&connection)?,
-            // 3 => delete_task(&connection)?,
-            // 4 => get_task(&connection)?,
+            2 => get_all(&db_client)?,
+            3 => delete_task(&db_client)?,
+            4 => get_task(&db_client)?,
             // 5 => {
             //     let mut decision = String::new();
 
@@ -61,7 +61,7 @@ fn run_app() -> Result<(), Box<dyn std::error::Error>> {
             //         _ => println!("Unknown input. Try again"),
             //     }
             // }
-            // 6 => clear_all_tasks(&connection)?,
+            6 => clear_all_tasks(&db_client)?,
             _ => println!("Unknown input. Try again"),
         }
     }
@@ -77,33 +77,19 @@ fn add_task(client: &DbClient) -> Result<(), Box<dyn std::error::Error>> {
 
     let task = Task::new(task_name.trim().to_string());
 
-    client.create_task(&task)?;
+    client.create(&task)?;
 
     println!("Task inserted successfully! \n");
 
     Ok(())
 }
 
-fn get_all(connection: &Connection) -> Result<(), Box<dyn std::error::Error>> {
-    let query = "SELECT * FROM tasks";
-
-    let mut stmt = connection.prepare(query)?;
-
+fn get_all(client: &DbClient) -> Result<(), Box<dyn std::error::Error>> {
     println!("\nTasks list");
 
-    while let Ok(State::Row) = stmt.next() {
-        let id: i64 = stmt.read::<i64, _>("id")?;
-        let title: String = stmt.read::<String, _>("title")?;
-        let status: i64 = stmt.read::<i64, _>("status")?;
-        let created_at: String = stmt.read::<String, _>("created_at")?;
+    let task_list = client.get_all()?;
 
-        let task = Task {
-            id,
-            title,
-            status,
-            created_at,
-        };
-
+    for task in task_list {
         println!("{}", task);
     }
 
@@ -111,70 +97,46 @@ fn get_all(connection: &Connection) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn delete_task(connection: &Connection) -> Result<(), Box<dyn std::error::Error>> {
+fn delete_task(client: &DbClient) -> Result<(), Box<dyn std::error::Error>> {
     println!("Task to delete ID: ");
     let mut task_id = String::new();
 
     io::stdin().read_line(&mut task_id)?;
     let task_id = task_id.trim().parse::<i32>()?;
 
-    let query = "DELETE FROM tasks WHERE id = :id";
-    let mut stmt = connection.prepare(query)?;
-
-    stmt.bind((":id", task_id.to_string().as_str()))?;
-    stmt.next()?;
+    client.delete_task(task_id)?;
 
     println!("Task deleted successfully! \n");
 
     Ok(())
 }
 
-fn get_task(connection: &Connection) -> Result<(), Box<dyn std::error::Error>> {
+fn get_task(client: &DbClient) -> Result<(), Box<dyn std::error::Error>> {
     println!("Task ID: ");
     let mut task_id = String::new();
 
     io::stdin().read_line(&mut task_id)?;
     let task_id: i32 = task_id.trim().parse::<i32>()?;
 
-    let query = "SELECT * FROM tasks WHERE id = :id";
-
-    let mut stmt = connection.prepare(query)?;
-    stmt.bind((":id", task_id.to_string().as_str()))?;
-
-    while let Ok(State::Row) = stmt.next() {
-        let id: i64 = stmt.read::<i64, _>("id")?;
-        let title: String = stmt.read::<String, _>("title")?;
-        let status: i64 = stmt.read::<i64, _>("status")?;
-        let created_at: String = stmt.read::<String, _>("created_at")?;
-
-        let task = Task {
-            id,
-            title,
-            status,
-            created_at,
-        };
-
-        println!("{}", task);
-    }
+    let task = client.get_task(task_id)?;
+    println!("{}", task);
 
     println!();
 
     Ok(())
 }
 
-fn clear_all_tasks(connection: &Connection) -> Result<(), Box<dyn std::error::Error>> {
+fn clear_all_tasks(client: &DbClient) -> Result<(), Box<dyn std::error::Error>> {
     println!("Clearing all tasks....\n");
 
-    let query = "DELETE FROM tasks";
-
-    connection.execute(query)?;
+    client.clear()?;
 
     println!("Database cleared successfully.\n");
 
     Ok(())
 }
 
-fn update_task_status(connection: &Connection) -> Result<(), Box<dyn std::error::Error>> {
+fn update_task_status(client: &DbClient) -> Result<(), Box<dyn std::error::Error>> {
     println!("Task ID: ");
     let mut task_id = String::new();
 
@@ -196,21 +158,14 @@ fn update_task_status(connection: &Connection) -> Result<(), Box<dyn std::error:
         _ => return Err("Failed to parse status. Please enter 1 or 0.".into()),
     };
 
-    let query = "UPDATE tasks SET status = :status WHERE id = :id;";
-    let mut stmt = connection.prepare(query)?;
+    client.update_task_status(status, task_id)?;
 
-    stmt.bind(
-        &[
-            (":status", status.to_string().as_str()),
-            (":id", task_id.to_string().as_str()),
-        ][..],
-    )?;
-    stmt.next()?;
+    println!("Task status updated successfully! \n");
 
     Ok(())
 }
 
-fn update_task_title(connection: &Connection) -> Result<(), Box<dyn std::error::Error>> {
+fn update_task_title(client: &DbClient) -> Result<(), Box<dyn std::error::Error>> {
     println!("Task ID: ");
     let mut task_id = String::new();
 
@@ -222,16 +177,7 @@ fn update_task_title(connection: &Connection) -> Result<(), Box<dyn std::error::
 
     io::stdin().read_line(&mut title)?;
 
-    let query = "UPDATE tasks SET title = :title WHERE id = :id;";
-    let mut stmt = connection.prepare(query)?;
-
-    stmt.bind(
-        &[
-            (":title", title.to_string().as_str()),
-            (":id", task_id.to_string().as_str()),
-        ][..],
-    )?;
-    stmt.next()?;
+    client.update_task_title(task_id, title.as_str())?;
 
     Ok(())
 }

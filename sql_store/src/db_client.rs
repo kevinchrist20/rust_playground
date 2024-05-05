@@ -12,7 +12,7 @@ impl DbClient {
         Ok(DbClient { connection })
     }
 
-    pub fn create_task(&self, task: &Task) -> Result<(), Error> {
+    pub fn create(&self, task: &Task) -> Result<(), Error> {
         let query = "INSERT INTO tasks (title, status) VALUES (?, ?)";
         let mut stmt = self.connection.prepare(query)?;
 
@@ -22,5 +22,102 @@ impl DbClient {
         Ok(())
     }
 
-    // pub fn delete_task() -> Result<(), ()> {}
+    pub fn get_all(&self) -> Result<Vec<Task>, Error> {
+        let mut task_list: Vec<Task> = Vec::new();
+
+        let query = "SELECT * FROM tasks";
+
+        let mut stmt = self.connection.prepare(query)?;
+
+        while let Ok(State::Row) = stmt.next() {
+            let id: i64 = stmt.read::<i64, _>("id")?;
+            let title: String = stmt.read::<String, _>("title")?;
+            let status: i64 = stmt.read::<i64, _>("status")?;
+            let created_at: String = stmt.read::<String, _>("created_at")?;
+
+            let task = Task {
+                id,
+                title,
+                status,
+                created_at,
+            };
+
+            task_list.push(task)
+        }
+
+        Ok(task_list)
+    }
+
+    pub fn delete_task(&self, task_id: i32) -> Result<(), Error> {
+        let query = "DELETE FROM tasks WHERE id = :id";
+        let mut stmt = self.connection.prepare(query)?;
+
+        stmt.bind((":id", task_id.to_string().as_str()))?;
+        stmt.next()?;
+
+        Ok(())
+    }
+
+    pub fn get_task(&self, task_id: i32) -> Result<Task, Error> {
+        let query = "SELECT * FROM tasks WHERE id = :id";
+
+        let mut stmt = self.connection.prepare(query)?;
+        stmt.bind((":id", task_id.to_string().as_str()))?;
+
+        let mut task = Task::empty();
+        while let Ok(State::Row) = stmt.next() {
+            let id: i64 = stmt.read::<i64, _>("id")?;
+            let title: String = stmt.read::<String, _>("title")?;
+            let status: i64 = stmt.read::<i64, _>("status")?;
+            let created_at: String = stmt.read::<String, _>("created_at")?;
+
+            task = Task {
+                id,
+                title,
+                status,
+                created_at,
+            };
+        }
+
+        Ok(task)
+    }
+
+    pub fn update_task_status(&self, status: i32, task_id: i32) -> Result<(), Error> {
+        let query = "UPDATE tasks SET status = :status WHERE id = :id;";
+        let mut stmt = self.connection.prepare(query)?;
+
+        stmt.bind(
+            &[
+                (":status", status.to_string().as_str()),
+                (":id", task_id.to_string().as_str()),
+            ][..],
+        )?;
+        stmt.next()?;
+
+        Ok(())
+    }  
+    
+    pub fn update_task_title(&self, task_id: i32, title: &str) -> Result<(), Error> {
+        let query = "UPDATE tasks SET title = :title WHERE id = :id;";
+        let mut stmt = self.connection.prepare(query)?;
+    
+        stmt.bind(
+            &[
+                (":title", title),
+                (":id", task_id.to_string().as_str()),
+            ][..],
+        )?;
+        stmt.next()?;
+
+
+        Ok(())
+    }
+
+    pub fn clear(&self) -> Result<(), Error> {
+        let query = "DELETE FROM tasks";
+
+        self.connection.execute(query)?;
+
+        Ok(())
+    }
 }
