@@ -1,7 +1,6 @@
 mod db_client;
 mod models;
 
-use sqlite::{Connection, State};
 use std::io;
 
 use crate::{db_client::DbClient, models::task::Task};
@@ -45,22 +44,7 @@ fn run_app() -> Result<(), Box<dyn std::error::Error>> {
             2 => get_all(&db_client)?,
             3 => delete_task(&db_client)?,
             4 => get_task(&db_client)?,
-            // 5 => {
-            //     let mut decision = String::new();
-
-            //     println!("What would you like to do?");
-            //     println!("(A) Update task status.");
-            //     println!("(B) Update task name.");
-
-            //     io::stdin().read_line(&mut decision)?;
-
-            //     let decision = decision.trim().parse::<char>()?;
-            //     match decision.to_ascii_lowercase() {
-            //         'a' => update_task_status(&connection)?,
-            //         'b' => update_task_title(&connection)?,
-            //         _ => println!("Unknown input. Try again"),
-            //     }
-            // }
+            5 => update_task(&db_client)?,
             6 => clear_all_tasks(&db_client)?,
             _ => println!("Unknown input. Try again"),
         }
@@ -136,13 +120,38 @@ fn clear_all_tasks(client: &DbClient) -> Result<(), Box<dyn std::error::Error>> 
     Ok(())
 }
 
-fn update_task_status(client: &DbClient) -> Result<(), Box<dyn std::error::Error>> {
+fn update_task(client: &DbClient) -> Result<(), Box<dyn std::error::Error>> {
+    let mut choice = String::new();
+
+    println!("What would you like to do?");
+    println!("(A) Update task status.");
+    println!("(B) Update task name.");
+
+    io::stdin().read_line(&mut choice)?;
+
+    let choice = choice.trim().parse::<char>()?;
+    let update_type = match choice.to_ascii_lowercase() {
+        'a' => 'a',
+        'b' => 'a',
+        _ => return Err("Unknown input. Try again".into()),
+    };
+
     println!("Task ID: ");
     let mut task_id = String::new();
 
     io::stdin().read_line(&mut task_id)?;
     let task_id = task_id.trim().parse::<i32>()?;
 
+    if update_type == 'a' {
+        update_task_status(client, task_id)?;
+    } else {
+        update_task_title(client, task_id)?;
+    }
+
+    Ok(())
+}
+
+fn update_task_status(client: &DbClient, task_id: i32) -> Result<(), Box<dyn std::error::Error>> {
     let mut status = String::new();
     println!("Task status: (1) Completed. (0) Pending");
 
@@ -165,13 +174,7 @@ fn update_task_status(client: &DbClient) -> Result<(), Box<dyn std::error::Error
     Ok(())
 }
 
-fn update_task_title(client: &DbClient) -> Result<(), Box<dyn std::error::Error>> {
-    println!("Task ID: ");
-    let mut task_id = String::new();
-
-    io::stdin().read_line(&mut task_id)?;
-    let task_id = task_id.trim().parse::<i32>()?;
-
+fn update_task_title(client: &DbClient, task_id: i32) -> Result<(), Box<dyn std::error::Error>> {
     let mut title = String::new();
     println!("Task title: ");
 
