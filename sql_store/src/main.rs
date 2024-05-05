@@ -1,9 +1,10 @@
 mod models;
+mod db_client;
 
 use sqlite::{Connection, State};
 use std::io;
 
-use crate::models::task::Task;
+use crate::{db_client::DbClient, models::task::Task};
 
 fn main() {
     match run_app() {
@@ -13,7 +14,7 @@ fn main() {
 }
 
 fn run_app() -> Result<(), Box<dyn std::error::Error>> {
-    let connection = sqlite::open("./db/todo.db")?;
+    let db_client = DbClient::new()?;
 
     println!("******** Welcome to the ToDo Store *********\n");
 
@@ -40,27 +41,27 @@ fn run_app() -> Result<(), Box<dyn std::error::Error>> {
 
         match choice {
             0 => break,
-            1 => add_task(&connection)?,
-            2 => get_all(&connection)?,
-            3 => delete_task(&connection)?,
-            4 => get_task(&connection)?,
-            5 => {
-                let mut decision = String::new();
+            1 => add_task(&db_client)?,
+            // 2 => get_all(&connection)?,
+            // 3 => delete_task(&connection)?,
+            // 4 => get_task(&connection)?,
+            // 5 => {
+            //     let mut decision = String::new();
 
-                println!("What would you like to do?");
-                println!("(A) Update task status.");
-                println!("(B) Update task name.");
+            //     println!("What would you like to do?");
+            //     println!("(A) Update task status.");
+            //     println!("(B) Update task name.");
 
-                io::stdin().read_line(&mut decision)?;
+            //     io::stdin().read_line(&mut decision)?;
 
-                let decision = decision.trim().parse::<char>()?;
-                match decision.to_ascii_lowercase() {
-                    'a' => update_task_status(&connection)?,
-                    'b' => update_task_title(&connection)?,
-                    _ => println!("Unknown input. Try again"),
-                }
-            }
-            6 => clear_all_tasks(&connection)?,
+            //     let decision = decision.trim().parse::<char>()?;
+            //     match decision.to_ascii_lowercase() {
+            //         'a' => update_task_status(&connection)?,
+            //         'b' => update_task_title(&connection)?,
+            //         _ => println!("Unknown input. Try again"),
+            //     }
+            // }
+            // 6 => clear_all_tasks(&connection)?,
             _ => println!("Unknown input. Try again"),
         }
     }
@@ -68,7 +69,7 @@ fn run_app() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn add_task(connection: &Connection) -> Result<(), Box<dyn std::error::Error>> {
+fn add_task(client: &DbClient) -> Result<(), Box<dyn std::error::Error>> {
     println!("Task title: ");
 
     let mut task_name = String::new();
@@ -76,11 +77,7 @@ fn add_task(connection: &Connection) -> Result<(), Box<dyn std::error::Error>> {
 
     let task = Task::new(task_name.trim().to_string());
 
-    let query = "INSERT INTO tasks (title, status) VALUES (?, ?)";
-    let mut stmt = connection.prepare(query)?;
-
-    stmt.bind(&[task.title.as_str(), &task.status.to_string()][..])?;
-    stmt.next()?;
+    client.create_task(&task)?;
 
     println!("Task inserted successfully! \n");
 
