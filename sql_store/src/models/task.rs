@@ -1,5 +1,6 @@
 use std::fmt;
 
+#[derive(Default)]
 pub struct Task {
     pub id: i64,
     pub title: String,
@@ -15,15 +16,6 @@ impl Task {
             status: 0,
             created_at: String::from(""),
         }
-    }
-
-    pub fn empty() -> Self {
-        Task {
-            id: 0,
-            title: String::from(""),
-            status: 0,
-            created_at: String::from(""),
-        }  
     }
 }
 

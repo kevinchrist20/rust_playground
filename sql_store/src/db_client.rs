@@ -63,7 +63,7 @@ impl DbClient {
         let mut stmt = self.connection.prepare(query)?;
         stmt.bind((":id", task_id.to_string().as_str()))?;
 
-        let mut task = Task::empty();
+        let mut task = Task::default();
         while let Ok(State::Row) = stmt.next() {
             let id: i64 = stmt.read::<i64, _>("id")?;
             let title: String = stmt.read::<String, _>("title")?;
