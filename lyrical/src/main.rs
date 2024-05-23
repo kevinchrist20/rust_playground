@@ -13,5 +13,5 @@ async fn main() -> Result<(), reqwest::Error> {
 
 
 async fn get_lyrics(artist: String, song: String) {
-    
+    let response = reqwest::get("${BASE_URL}").await?;
 }
