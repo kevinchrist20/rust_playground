@@ -1,10 +1,12 @@
 use scraper::Selector;
+use html2text;
+use std::{fs, io};
 
 const BASE_URL: &str = "https://www.azlyrics.com";
 
 #[tokio::main]
 async fn main() {
-    match get_lyrics("imaginedragons", "wrecked").await {
+    match get_lyrics("eminem", "houdini").await {
         Ok(()) => println!("Thank you for coming. Until next time!!"),
         Err(err) => eprintln!("An error occurred: {}", err),
     }
@@ -19,9 +21,6 @@ async fn get_lyrics(artist: &str, song: &str) -> Result<(), Box<dyn std::error::
     let html_document = scraper::Html::parse_document(&html_content);
 
     let all_divs = Selector::parse("div")?;
-    let comment_selector = Selector::parse("comment")?;
-    let br_selector = Selector::parse("br")?;
-    let img_selector = Selector::parse("img")?;
 
     let lyrics_div: Vec<_> = html_document
         .select(&all_divs)
@@ -29,15 +28,24 @@ async fn get_lyrics(artist: &str, song: &str) -> Result<(), Box<dyn std::error::
             let element_data = element.value();
             element_data.attr("class").is_none() && element_data.attr("id").is_none()
         })
-        // .chain(html_document.select(&comment_selector))
-        // .chain(html_document.select(&br_selector))
-        // .chain(html_document.select(&img_selector))
         .collect();
 
+    let filename = format!("{artist}_{song}.txt");
+    let mut lyrics_content = String::from("");
+    
     // Print the filtered divs
     for div in lyrics_div {
-        println!("{}", div.inner_html());
+        let html = div.inner_html();
+        let text = html2text::from_read(html.as_bytes(), 80);
+
+        lyrics_content.push_str(&text);
     }
 
+    write_to_file(lyrics_content, &filename)?;
+
     Ok(())
+}
+
+fn write_to_file(lyrics: String, filename: &str) -> Result<(), io::Error> {
+    fs::write(filename, lyrics)
 }
