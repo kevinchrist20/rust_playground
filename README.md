@@ -9,7 +9,7 @@ Welcome to the Rust Playground! This is a space where I experiment with the Rust
 - [Reqwest](https://crates.io/crates/reqwest): An HTTP client for Rust.
 - [Scraper](https://crates.io/crates/scraper): A crate for scraping HTML documents.
 - [html2text](https://crates.io/crates/html2text): A crate for converting HTML to plain text.
-
+- [Regex](https://crates.io/crates/regex): A crate for working with regular expressions in Rust.
 
 ## Resources
 
@@ -78,6 +78,8 @@ $ cargo run -- "artist name" "song title"
 
 # Example
 $ cargo run -- "eminem" "lose yourself"
+
+# Generates a file named eminem_loseyourself.txt in the current directory
 ```
 
 Replace `song title` and `artist name` with the title and artist name of the song you want to fetch lyrics for. The lyrics will be written to a text file in the current directory with the song title and artist name as the filename.
