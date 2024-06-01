@@ -27,6 +27,7 @@ async fn main() {
 async fn get_lyrics(artist: &str, song: &str) -> Result<(), Box<dyn std::error::Error>> {
     let url = format!("{BASE_URL}/lyrics/{artist}/{song}.html");
 
+    println!("Fetching lyrics from: {}", url);
     let response = reqwest::get(url).await?;
     if response.status() != 200 {
         return Err("Failed to get lyrics. Try again!".into());
