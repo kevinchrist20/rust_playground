@@ -19,7 +19,7 @@ async fn main() {
     let song_title = &args[2];
 
     match get_lyrics(&artist, &song_title).await {
-        Ok(()) => println!("Thank you for coming. Until next time!!"),
+        Ok(()) => println!("Song lyrics saved to file successfully! 🎉"),
         Err(err) => eprintln!("An error occurred: {}", err),
     }
 }
@@ -27,10 +27,12 @@ async fn main() {
 async fn get_lyrics(artist: &str, song: &str) -> Result<(), Box<dyn std::error::Error>> {
     let url = format!("{BASE_URL}/lyrics/{artist}/{song}.html");
 
-    println!("BASE_URL: {}", url);
     let response = reqwest::get(url).await?;
-    let html_content = response.text().await?;
+    if response.status() != 200 {
+        return Err("Failed to get lyrics. Try again!".into());
+    }
 
+    let html_content = response.text().await?;
     let html_document = scraper::Html::parse_document(&html_content);
 
     let all_divs = Selector::parse("div")?;
@@ -53,7 +55,6 @@ async fn get_lyrics(artist: &str, song: &str) -> Result<(), Box<dyn std::error::
         lyrics_content.push_str(&text);
     }
 
-    println!("{}", lyrics_content);
     write_to_file(lyrics_content, &filename)?;
 
     Ok(())
