@@ -4,6 +4,8 @@ use scraper::Selector;
 use std::env::{self};
 use std::{fs, io};
 
+use regex::Regex;
+
 const BASE_URL: &str = "https://www.azlyrics.com";
 
 #[tokio::main]
@@ -25,6 +27,9 @@ async fn main() {
 }
 
 async fn get_lyrics(artist: &str, song: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let artist = normalize_url_str(artist)?;
+    let song = normalize_url_str(song)?;
+    
     let url = format!("{BASE_URL}/lyrics/{artist}/{song}.html");
 
     println!("Fetching lyrics from: {}", url);
@@ -63,4 +68,18 @@ async fn get_lyrics(artist: &str, song: &str) -> Result<(), Box<dyn std::error::
 
 fn write_to_file(lyrics: String, filename: &str) -> Result<(), io::Error> {
     fs::write(filename, lyrics)
+}
+
+fn normalize_url_str(path_str: &str) -> Result<String, regex::Error> {
+    let lowercase = path_str.to_lowercase();
+
+    // Remove special characters
+    let re = Regex::new(r"[^a-z0-9\s]")?;
+    let cleaned = re.replace_all(&lowercase, "");
+
+    // Remove spaces
+    let re_spaces = Regex::new(r"\s+")?;
+    let no_spaces = re_spaces.replace_all(&cleaned, "");
+
+    Ok(no_spaces.to_string())
 }
